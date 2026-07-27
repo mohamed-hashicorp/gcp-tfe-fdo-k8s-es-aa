@@ -1,0 +1,68 @@
+# ---------------------------------------------------------------------------
+# Project & Region
+# ---------------------------------------------------------------------------
+project_id  = "GCP_PROJECT_ID"
+region      = "europe-west1"
+zone        = "europe-west1-b"
+prefix      = "tfe"
+environment = "prod"
+
+# ---------------------------------------------------------------------------
+# GKE Cluster
+# ---------------------------------------------------------------------------
+node_machine_type      = "n2-standard-4"
+node_disk_size_gb      = 100
+node_count             = 1
+node_min_count         = 1
+node_max_count         = 3
+subnet_cidr            = "10.10.0.0/20"
+pods_cidr              = "10.20.0.0/16"
+services_cidr          = "10.30.0.0/20"
+master_ipv4_cidr_block = "172.16.0.0/28"
+
+# ---------------------------------------------------------------------------
+# DNS
+# ---------------------------------------------------------------------------
+dns_zone_name = "REPLACE_WITH_EXISTING_ZONE_NAME"  # gcloud dns managed-zones list
+tfe_subdomain = "tfe"                               # results in tfe.<zone-dns-name>
+
+# ---------------------------------------------------------------------------
+# ACME / TLS
+# Use staging URL for testing to avoid Let's Encrypt rate limits:
+#   https://acme-staging-v02.api.letsencrypt.org/directory
+# Switch to production when ready:
+#   https://acme-v02.api.letsencrypt.org/directory
+# ---------------------------------------------------------------------------
+acme_server_url      = "https://acme-staging-v02.api.letsencrypt.org/directory"
+acme_email           = "REPLACE_WITH_YOUR_EMAIL"
+cert_organization    = "REPLACE_WITH_YOUR_ORG"
+gcp_credentials_file = "/path/to/sa-key.json"   # GCP SA key with Cloud DNS permissions
+
+# ---------------------------------------------------------------------------
+# Terraform Enterprise
+# ---------------------------------------------------------------------------
+tfe_namespace         = "terraform-enterprise"
+tfe_chart_version     = "1.4.2"           # Check https://helm.releases.hashicorp.com for latest
+tfe_image_repository  = "quay.io/hashicorp/terraform-enterprise"
+tfe_image_tag         = "v202501-1"       # Replace with desired TFE release tag
+
+# !! SENSITIVE — do NOT commit real values !!
+# Provide via environment variables:
+#   export TF_VAR_tfe_image_registry_username="..."
+#   export TF_VAR_tfe_image_registry_password="..."
+#   export TF_VAR_tfe_license="..."
+#   export TF_VAR_tfe_encryption_password="..."
+#   export TF_VAR_tfe_database_password="..."
+
+# ---------------------------------------------------------------------------
+# TFE Database (PostgreSQL 14+)
+# ---------------------------------------------------------------------------
+tfe_database_host = "REPLACE_WITH_DB_HOST:5432"
+tfe_database_name = "tfe"
+tfe_database_user = "tfe"
+
+# ---------------------------------------------------------------------------
+# TFE Redis
+# ---------------------------------------------------------------------------
+tfe_redis_host     = "REPLACE_WITH_REDIS_HOST:6379"
+tfe_redis_password = ""   # Set if Redis auth is enabled
