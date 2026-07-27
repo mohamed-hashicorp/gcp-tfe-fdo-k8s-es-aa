@@ -9,8 +9,10 @@ environment = "prod"
 
 # ---------------------------------------------------------------------------
 # GKE Cluster
+# Node must have enough allocatable CPU for TFE (requests 4 CPU).
+# n2-standard-8 provides ~7.9 vCPU allocatable — minimum recommended.
 # ---------------------------------------------------------------------------
-node_machine_type      = "n2-standard-4"
+node_machine_type      = "n2-standard-8"
 node_disk_size_gb      = 100
 node_count             = 1
 node_min_count         = 1
@@ -21,48 +23,51 @@ services_cidr          = "10.30.0.0/20"
 master_ipv4_cidr_block = "172.16.0.0/28"
 
 # ---------------------------------------------------------------------------
-# DNS
+# DNS — existing Cloud DNS managed zone in your GCP project
+# Run: gcloud dns managed-zones list --project=<project-id>
 # ---------------------------------------------------------------------------
-dns_zone_name = "REPLACE_WITH_EXISTING_ZONE_NAME"  # gcloud dns managed-zones list
-tfe_subdomain = "tfe"                               # results in tfe.<zone-dns-name>
+dns_zone_name = "REPLACE_WITH_EXISTING_ZONE_NAME"   # e.g. my-dns-zone
+tfe_subdomain = "tfe"                                # results in tfe.<zone-dns-name>
 
 # ---------------------------------------------------------------------------
 # ACME / TLS
+# Authentication uses Application Default Credentials — no key file needed.
+# Run: gcloud auth application-default login
+#
 # Use staging URL for testing to avoid Let's Encrypt rate limits:
 #   https://acme-staging-v02.api.letsencrypt.org/directory
 # Switch to production when ready:
 #   https://acme-v02.api.letsencrypt.org/directory
 # ---------------------------------------------------------------------------
-acme_server_url      = "https://acme-staging-v02.api.letsencrypt.org/directory"
-acme_email           = "REPLACE_WITH_YOUR_EMAIL"
-cert_organization    = "REPLACE_WITH_YOUR_ORG"
-gcp_credentials_file = "/path/to/sa-key.json"   # GCP SA key with Cloud DNS permissions
+acme_server_url   = "https://acme-staging-v02.api.letsencrypt.org/directory"
+acme_email        = "REPLACE_WITH_YOUR_EMAIL"
+cert_organization = "REPLACE_WITH_YOUR_ORG"
 
 # ---------------------------------------------------------------------------
 # Terraform Enterprise
+# Check https://helm.releases.hashicorp.com for latest chart version.
+# Image registry: images.releases.hashicorp.com (license key is the password)
 # ---------------------------------------------------------------------------
-tfe_namespace         = "terraform-enterprise"
-tfe_chart_version     = "1.4.2"           # Check https://helm.releases.hashicorp.com for latest
-tfe_image_repository  = "quay.io/hashicorp/terraform-enterprise"
-tfe_image_tag         = "v202501-1"       # Replace with desired TFE release tag
+tfe_namespace           = "terraform-enterprise"
+tfe_chart_version       = "1.6.8"
+tfe_image_tag           = "v202501-1"   # Replace with desired TFE release tag
+tfe_encryption_password = "REPLACE_WITH_STRONG_ENCRYPTION_PASSWORD"
 
 # !! SENSITIVE — do NOT commit real values !!
-# Provide via environment variables:
-#   export TF_VAR_tfe_image_registry_username="..."
-#   export TF_VAR_tfe_image_registry_password="..."
-#   export TF_VAR_tfe_license="..."
-#   export TF_VAR_tfe_encryption_password="..."
-#   export TF_VAR_tfe_database_password="..."
+# tfe_license = "02MV4UU43BK5H..."   # Paste your license string
 
 # ---------------------------------------------------------------------------
-# TFE Database (PostgreSQL 14+)
+# Cloud SQL (PostgreSQL 16)
 # ---------------------------------------------------------------------------
-tfe_database_host = "REPLACE_WITH_DB_HOST:5432"
-tfe_database_name = "tfe"
-tfe_database_user = "tfe"
+db_tier               = "db-custom-2-7680"   # 2 vCPU, 7.5 GB RAM
+db_disk_size_gb       = 50
+tfe_database_name     = "tfe"
+tfe_database_user     = "tfe"
+tfe_database_password = "REPLACE_WITH_STRONG_DB_PASSWORD"
 
 # ---------------------------------------------------------------------------
-# TFE Redis
+# Redis (Memorystore) — no password / TLS required
+# redis_alt_zone must differ from var.zone above
 # ---------------------------------------------------------------------------
-tfe_redis_host     = "REPLACE_WITH_REDIS_HOST:6379"
-tfe_redis_password = ""   # Set if Redis auth is enabled
+redis_memory_size_gb = 1
+redis_alt_zone       = "europe-west1-c"
